@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyTelegramInitData } from "@/shared/lib/telegram/verify-init-data";
+
 import { supabaseAdmin } from "@/shared/lib/supabase/admin";
 import { createSession } from "@/shared/lib/auth/session";
+import {
+  InitDataError,
+  verifyTelegramInitData,
+} from "@/shared/lib/telegram/verify-init-data";
+import { rateLimit } from "@/shared/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { initData } = await req.json();
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const { allowed } = await rateLimit(`auth:${ip}`, {
+    limit: 10,
+    windowSec: 60,
+  });
+  if (!allowed) {
+    return NextResponse.json({ error: "TOO_MANY_REQUESTS" }, { status: 429 });
+  }
 
-  if (!initData) {
+  const body = await req.json().catch(() => null);
+  const initData = body?.initData;
+
+  if (typeof initData !== "string" || !initData) {
     return NextResponse.json({ error: "NO_INIT_DATA" }, { status: 400 });
   }
 
@@ -17,12 +32,24 @@ export async function POST(req: NextRequest) {
       process.env.TELEGRAM_BOT_TOKEN!,
     );
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 401 });
+    if (e instanceof InitDataError) {
+      console.warn("[auth/telegram] rejected", e.code, { ip });
+    }
+    return NextResponse.json({ error: "INVALID_INIT_DATA" }, { status: 401 });
   }
 
   const { id, username, first_name } = verified.user;
 
-  // upsert пользователя
+  const { data: existingUser } = await supabaseAdmin
+    .from("users")
+    .select("is_banned")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingUser?.is_banned) {
+    return NextResponse.json({ error: "ACCOUNT_BANNED" }, { status: 403 });
+  }
+
   const { error: userError } = await supabaseAdmin
     .from("users")
     .upsert(
@@ -31,10 +58,10 @@ export async function POST(req: NextRequest) {
     );
 
   if (userError) {
+    console.error("[auth/telegram] upsert failed", userError);
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
-  // гарантируем наличие кошелька (как в demo_deposit)
   await supabaseAdmin
     .from("wallets")
     .upsert({ user_id: id }, { onConflict: "user_id", ignoreDuplicates: true });

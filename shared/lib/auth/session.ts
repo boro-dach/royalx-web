@@ -1,3 +1,4 @@
+import { sign } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -8,7 +9,7 @@ export async function createSession(userId: number) {
   const token = await new SignJWT({ uid: userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("30d")
+    .setExpirationTime("7d")
     .sign(secret);
 
   const cookieStore = await cookies();

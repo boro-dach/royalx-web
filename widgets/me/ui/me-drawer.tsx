@@ -1,3 +1,7 @@
+"use client";
+
+import { splitMoney } from "@/entities/profile/lib/format-money";
+import { useProfile } from "@/entities/profile/model/use-profile";
 import { Button } from "@/shared/ui/button";
 import { ButtonGroup } from "@/shared/ui/button-group";
 import {
@@ -11,6 +15,10 @@ import {
 import { Cog, Coins, Headset, ScrollText, User } from "lucide-react";
 
 export default function MeDrawer() {
+  const { data: profile, isLoading } = useProfile();
+
+  const balance = profile ? splitMoney(profile.balanceCents) : null;
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -26,14 +34,23 @@ export default function MeDrawer() {
           <div className="flex flex-row items-center gap-4">
             <div className="h-12 w-12 rounded-full bg-zinc-400"></div>
             <div className="flex flex-col gap-1">
-              <p>Имя Фамилия</p>
-              <p className="text-zinc-400 text-sm">ID: 983192830918</p>
+              <p>{isLoading ? "..." : profile?.displayName}</p>
+              <p className="text-zinc-400 text-sm">
+                ID: {isLoading ? "..." : profile?.id}
+              </p>
             </div>
           </div>
           <div className="flex flex-col gap-1">
             <p className="">Баланс</p>
             <p className="text-xl font-bold text-zinc-400">
-              <span className="text-primary">$15</span>.00
+              {isLoading || !balance ? (
+                "..."
+              ) : (
+                <>
+                  <span className="text-primary">${balance.whole}</span>.
+                  {balance.fraction}
+                </>
+              )}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 grid-rows-1">
