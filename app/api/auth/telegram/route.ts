@@ -25,16 +25,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "NO_INIT_DATA" }, { status: 400 });
   }
 
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    console.error("[auth/telegram] TELEGRAM_BOT_TOKEN is not set");
+    return NextResponse.json(
+      { error: "SERVER_MISCONFIGURED" },
+      { status: 500 },
+    );
+  }
+
   let verified;
   try {
-    verified = verifyTelegramInitData(
-      initData,
-      process.env.TELEGRAM_BOT_TOKEN!,
-    );
+    verified = verifyTelegramInitData(initData, botToken);
   } catch (e) {
-    if (e instanceof InitDataError) {
-      console.warn("[auth/telegram] rejected", e.code, { ip });
-    }
+    console.error("[auth/telegram] auth failed", e);
     return NextResponse.json({ error: "INVALID_INIT_DATA" }, { status: 401 });
   }
 
