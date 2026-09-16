@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const { data: wallet, error: walletError } = await supabaseAdmin
     .from("wallets")
-    .select("balance, currency")
+    .select("balance")
     .eq("user_id", uid)
     .maybeSingle();
 
@@ -39,6 +39,6 @@ export async function GET(req: NextRequest) {
     id: user.id,
     displayName: user.first_name || user.username || "Игрок",
     balanceCents: wallet?.balance ?? 0,
-    currency: wallet?.currency ?? "USD",
+    currency: "USD",
   });
 }
