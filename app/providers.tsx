@@ -1,75 +1,23 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import { AmountDialog } from "@/shared/ui/amount-dialog";
-import {
-  useDeposit,
-  useWithdraw,
-} from "@/entities/wallet/model/use-wallet-mutations";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthGate } from "./auth-gate";
+import { WalletDialogsProvider } from "@/entities/wallet/model/wallet-dialog-context";
 
-type WalletDialogsContextValue = {
-  openDeposit: () => void;
-  openWithdraw: () => void;
-};
-
-const WalletDialogsContext = createContext<WalletDialogsContextValue | null>(
-  null,
-);
-
-export function WalletDialogsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [depositOpen, setDepositOpen] = useState(false);
-  const [withdrawOpen, setWithdrawOpen] = useState(false);
-
-  const deposit = useDeposit();
-  const withdraw = useWithdraw();
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+      }),
+  );
 
   return (
-    <WalletDialogsContext.Provider
-      value={{
-        openDeposit: () => setDepositOpen(true),
-        openWithdraw: () => setWithdrawOpen(true),
-      }}
-    >
-      {children}
-
-      <AmountDialog
-        open={depositOpen}
-        onOpenChange={setDepositOpen}
-        title="Депозит"
-        isPending={deposit.isPending}
-        error={deposit.error?.message}
-        onConfirm={(cents) =>
-          deposit.mutate(cents, { onSuccess: () => setDepositOpen(false) })
-        }
-      />
-      <AmountDialog
-        open={withdrawOpen}
-        onOpenChange={setWithdrawOpen}
-        title="Вывод"
-        isPending={withdraw.isPending}
-        error={
-          withdraw.error?.message === "INSUFFICIENT_FUNDS"
-            ? "Недостаточно средств"
-            : withdraw.error?.message
-        }
-        onConfirm={(cents) =>
-          withdraw.mutate(cents, { onSuccess: () => setWithdrawOpen(false) })
-        }
-      />
-    </WalletDialogsContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthGate>
+        <WalletDialogsProvider>{children}</WalletDialogsProvider>
+      </AuthGate>
+    </QueryClientProvider>
   );
-}
-
-export function useWalletDialogs() {
-  const ctx = useContext(WalletDialogsContext);
-  if (!ctx) {
-    throw new Error(
-      "useWalletDialogs must be used within WalletDialogsProvider",
-    );
-  }
-  return ctx;
 }
