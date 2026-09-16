@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
-    .select("id, username, first_name, last_name")
+    .select("id, username, first_name")
     .eq("id", uid)
     .maybeSingle();
 
@@ -31,15 +31,13 @@ export async function GET(req: NextRequest) {
     .maybeSingle();
 
   if (walletError) {
+    console.error("[api/me] wallet select error", walletError);
     return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
   }
 
   return NextResponse.json({
     id: user.id,
-    displayName:
-      [user.first_name, user.last_name].filter(Boolean).join(" ") ||
-      user.username ||
-      "Игрок",
+    displayName: user.first_name || user.username || "Игрок",
     balanceCents: wallet?.balance ?? 0,
     currency: wallet?.currency ?? "USD",
   });
