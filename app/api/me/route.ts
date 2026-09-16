@@ -15,7 +15,12 @@ export async function GET(req: NextRequest) {
     .eq("id", uid)
     .maybeSingle();
 
-  if (userError || !user) {
+  if (userError) {
+    console.error("[api/me] user select error", userError);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 500 });
+  }
+  if (!user) {
+    console.warn("[api/me] user not found", { uid });
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
 
