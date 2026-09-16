@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/admin";
 import { requireActiveUser } from "@/shared/lib/auth/require-user";
 
-export async function GET() {
-  const uid = await requireActiveUser();
+export async function GET(req: NextRequest) {
+  const initData = req.headers.get("x-telegram-init-data");
+  const uid = await requireActiveUser(initData);
   if (!uid) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }

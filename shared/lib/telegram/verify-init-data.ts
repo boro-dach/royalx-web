@@ -11,7 +11,7 @@ const TelegramUserSchema = z.object({
 
 export type TelegramUser = z.infer<typeof TelegramUserSchema>;
 
-const MAX_AUTH_AGE_SECONDS = 60 * 5;
+const MAX_AUTH_AGE_SECONDS = 60 * 60 * 24; // 24 часа
 
 export class InitDataError extends Error {
   constructor(public code: string) {

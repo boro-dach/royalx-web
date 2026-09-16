@@ -1,11 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { useDeposit, useWithdraw } from "./use-wallet-mutations";
 import { AmountDialog } from "@/shared/ui/amount-dialog";
-import {
-  useDeposit,
-  useWithdraw,
-} from "@/entities/wallet/model/use-wallet-mutations";
 
 type WalletDialogsContextValue = {
   openDeposit: () => void;
