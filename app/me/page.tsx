@@ -8,7 +8,7 @@ import { BadgeCheck, ChevronRight, Cross, Upload, X } from "lucide-react";
 
 export default function MePage() {
   const { data: profile } = useProfile();
-  const username = profile?.username || "Гость";
+  const username = profile?.displayName || "Гость";
 
   return (
     <div className="flex flex-col w-full p-4 gap-6">
