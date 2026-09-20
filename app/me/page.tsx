@@ -1,5 +1,6 @@
 "use client";
 
+import { splitMoney } from "@/entities/profile/lib/format-money";
 import { useProfile } from "@/entities/profile/model/use-profile";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -8,6 +9,7 @@ import { BadgeCheck, ChevronRight, Cross, Upload, X } from "lucide-react";
 
 export default function MePage() {
   const { data: profile } = useProfile();
+  const balance = splitMoney(profile?.balanceCents ?? 0);
   const username = profile?.displayName || "Гость";
 
   return (
@@ -55,7 +57,8 @@ export default function MePage() {
       <div className="flex flex-col gap-4 mt-2">
         <p className="text-xl font-bold">Баланс</p>
         <p className="text-4xl font-bold">
-          $<span className="text-primary">{profile?.balanceCents || 0}</span>
+          $<span className="text-primary">{balance.whole}</span>.
+          {balance.fraction}
         </p>
         <div className="grid grid-cols-2 grid-rows-1 w-full gap-2">
           <Button className="font-bold">Пополнить</Button>
