@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Onest, Unbounded } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Footer from "@/widgets/footer/ui/footer";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const onest = Onest({
+  variable: "--font-unbounded",
+  subsets: ["latin", "cyrillic"],
 });
 
 const geistMono = Geist_Mono({
@@ -28,7 +28,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`} suppressHydrationWarning
+      className={`${onest.className} ${geistMono.variable} h-full antialiased dark`}
+      suppressHydrationWarning
     >
       <head>
         <Script

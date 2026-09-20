@@ -27,7 +27,6 @@ export default function Home() {
       </div>
 
       <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
-        {/* шапка секции: заголовок слева, стрелки справа */}
         <div className="flex items-center justify-between">
           <p className="flex items-center gap-1.5 font-bold">
             <Flame className="size-5 text-orange-500" />
@@ -41,7 +40,7 @@ export default function Home() {
         </div>
 
         <CarouselContent className="-ml-3 mt-3">
-          {GAMES.map(g => (
+          {GAMES.map((g) => (
             <CarouselItem key={g.id} className="basis-auto pl-3">
               <GameCard {...g} />
             </CarouselItem>

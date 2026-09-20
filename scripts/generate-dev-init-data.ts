@@ -1,8 +1,11 @@
 import crypto from "crypto";
+import "dotenv/config";
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 if (!botToken) {
-  console.error("Set TELEGRAM_BOT_TOKEN in your env before running this script");
+  console.error(
+    "Set TELEGRAM_BOT_TOKEN in your env before running this script",
+  );
   process.exit(1);
 }
 
@@ -24,8 +27,14 @@ function buildInitData(botToken: string): string {
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
 
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
-  const hash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
+  const secretKey = crypto
+    .createHmac("sha256", "WebAppData")
+    .update(botToken)
+    .digest();
+  const hash = crypto
+    .createHmac("sha256", secretKey)
+    .update(dataCheckString)
+    .digest("hex");
 
   params.set("hash", hash);
   return params.toString();
