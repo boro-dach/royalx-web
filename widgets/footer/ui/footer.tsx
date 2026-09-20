@@ -1,17 +1,14 @@
-import { Button } from "@/shared/ui/button";
-import MeDrawer from "@/widgets/me/ui/me-drawer";
-import { Home } from "lucide-react";
-import Link from "next/link";
+"use client"
+
+import { NavLink } from "@/widgets/footer/ui/nav-link";
+import { NAV_ITEMS } from "@/widgets/footer/lib/nav-items";
 
 export default function Footer() {
   return (
-    <footer className="h-12 mt-auto flex flex-row self-center items-center justify-center w-fit rounded-2xl sticky bottom-4 px-4 border gap-2">
-      <Link href={"/"}>
-        <Button variant={"ghost"} size={"icon-lg"}>
-          <Home className="size-6" />
-        </Button>
-      </Link>
-      <MeDrawer />
+    <footer className="sticky bottom-4 mx-4 mt-auto flex flex-row items-center justify-center gap-2 rounded-full border border-white/10 bg-black/80 px-2 backdrop-blur-md" >
+      {NAV_ITEMS.map((item) => (
+        <NavLink key={item.href} {...item} />
+      ))}
     </footer>
   );
 }

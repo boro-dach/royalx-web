@@ -7,12 +7,19 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const tg = window?.Telegram?.WebApp;
-    if (tg) {
+
+    if (tg?.initData) {
       tg.ready();
-      setInTelegram(!!tg.initData);
-    } else {
-      setInTelegram(false);
+      setInTelegram(true);
+      return;
     }
+
+    if (process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_INIT_DATA) {
+      setInTelegram(true);
+      return;
+    }
+
+    setInTelegram(false);
   }, []);
 
   if (inTelegram === null) {

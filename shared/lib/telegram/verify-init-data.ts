@@ -26,12 +26,12 @@ export function verifyTelegramInitData(
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
 
-  if (!hash) throw new InitDataError("MISSING_HASH");
+  if (!hash || !/^[0-9a-f]{64}$/.test(hash)) throw new InitDataError("BAD_HASH");
 
   params.delete("hash");
 
   const dataCheckString = [...params.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
 

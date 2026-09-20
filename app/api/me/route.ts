@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
-    .select("id, username, first_name")
+    .select("id, username, first_name, avatar_url")
     .eq("id", uid)
     .maybeSingle();
 
@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     id: user.id,
     displayName: user.first_name || user.username || "Игрок",
+    avatarUrl: user.avatar_url ?? null,
     balanceCents: wallet?.balance ?? 0,
     currency: "USD",
   });

@@ -14,10 +14,12 @@ export default function Header() {
 
   return (
     <header className="h-12 sticky top-4 flex flex-row items-center justify-between">
-      <h1 className="text-xl font-bold">
-        Приятной игры, {isLoading ? "..." : profile?.displayName || "гость"}
-      </h1>
+      <div className="flex flex-row items-center gap-2">
+        <div className="h-8 w-8 rounded-xl bg-green-400"></div>
+        <p className="font-bold">RoyalX</p>
+      </div>
       <div className="flex flex-row items-center gap-2 border rounded-md px-2 py-1">
+        <img href={profile ? profile.avatar_url : "/"} className="h-6 w-6 rounded-full"/>
         <span className="text-sm font-medium">
           {isLoading || !balance ? (
             "..."
