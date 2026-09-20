@@ -19,7 +19,11 @@ export default function Header() {
         <p className="font-bold">RoyalX</p>
       </div>
       <div className="flex flex-row items-center gap-2 border rounded-md px-2 py-1">
-        <img src={profile?.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+        <img
+          src={profile?.avatarUrl || "/default-avatar.png"}
+          alt=""
+          className="h-6 w-6 rounded-full object-cover"
+        />
         <span className="text-sm font-medium">
           {isLoading || !balance ? (
             "..."

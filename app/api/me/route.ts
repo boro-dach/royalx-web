@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     id: user.id,
     displayName: user.first_name || user.username || "Игрок",
+    username: user.username ?? null,
     avatarUrl: user.avatar_url ?? null,
     balanceCents: wallet?.balance ?? 0,
     currency: "USD",
