@@ -15,9 +15,9 @@ export default function MePage() {
       <h1 className="text-2xl font-bold">Профиль</h1>
 
       <div className="flex flex-row items-center gap-4 min-w-0">
-        {profile?.avatar_url ? (
+        {profile?.avatarUrl ? (
           <img
-            src={profile.avatar_url}
+            src={profile.avatarUrl}
             alt={username}
             className="size-20 shrink-0 rounded-xl object-cover"
           />

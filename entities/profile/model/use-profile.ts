@@ -6,6 +6,8 @@ import { apiFetch } from "@/shared/lib/telegram/api-fetch";
 export type Profile = {
   id: number;
   displayName: string;
+  username: string | null;
+  avatarUrl: string | null;
   balanceCents: number;
   currency: string;
 };
