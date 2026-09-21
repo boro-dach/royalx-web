@@ -1,16 +1,51 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { splitMoney } from "@/entities/profile/lib/format-money";
 import { useProfile } from "@/entities/profile/model/use-profile";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { ReferralCard } from "@/widgets/referral/ui/referral-card";
-import { BadgeCheck, ChevronRight, Cross, Upload, X } from "lucide-react";
+import { BadgeCheck, ChevronRight, Clock, Shield, X } from "lucide-react";
 
 export default function MePage() {
+  const router = useRouter();
   const { data: profile } = useProfile();
   const balance = splitMoney(profile?.balanceCents ?? 0);
   const username = profile?.displayName || "Гость";
+
+  const renderKycBadge = () => {
+    switch (profile?.kycStatus) {
+      case "approved":
+        return (
+          <span className="text-emerald-400 flex flex-row items-center gap-1 font-semibold">
+            Верифицирован
+            <BadgeCheck className="size-4 text-emerald-400" />
+          </span>
+        );
+      case "pending":
+        return (
+          <span className="text-amber-400 flex flex-row items-center gap-1 font-semibold">
+            На проверке
+            <Clock className="size-4 text-amber-400" />
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="text-destructive flex flex-row items-center gap-1 font-semibold">
+            Отклонён
+            <X className="size-4 text-destructive" />
+          </span>
+        );
+      default:
+        return (
+          <span className="text-destructive flex flex-row items-center gap-1 font-semibold">
+            Не верифицирован
+            <X className="size-4 text-destructive" />
+          </span>
+        );
+    }
+  };
 
   return (
     <div className="flex flex-col w-full p-4 gap-6">
@@ -67,6 +102,7 @@ export default function MePage() {
           </Button>
         </div>
       </div>
+
       <ReferralCard />
       <Card>
         <CardHeader>
@@ -77,21 +113,33 @@ export default function MePage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="flex flex-row items-center gap-1">
-            Статус аккаунта:{" "}
-            <span className="text-destructive flex flex-row items-center gap-1">
-              Не верифицирован
-              <X className="size-4 text-destructive" />
-            </span>
+            Статус аккаунта: {renderKycBadge()}
           </p>
           <p className="text-sm text-zinc-400">
             При выводе средств на сумму 50000₽ и более, потребуется верификация
             аккаунта.
           </p>
-          <Button className="font-bold flex flex-row items-center gap-1">
-            Пройти верификацию <ChevronRight />
-          </Button>
+          {profile?.kycStatus !== "approved" && (
+            <Button className="font-bold flex flex-row items-center gap-1">
+              Пройти верификацию <ChevronRight />
+            </Button>
+          )}
         </CardContent>
       </Card>
+
+      {profile?.isAdmin && (
+        <div className="flex justify-center pt-2 pb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs border-white/10 bg-zinc-900/60 text-zinc-400 hover:text-white hover:border-purple-500/40 gap-1.5 font-medium rounded-xl h-8 px-3"
+            onClick={() => router.push("/admin")}
+          >
+            <Shield className="size-3.5 text-purple-400" />
+            Панель администратора
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

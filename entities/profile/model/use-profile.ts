@@ -10,6 +10,8 @@ export type Profile = {
   avatarUrl: string | null;
   balanceCents: number;
   currency: string;
+  kycStatus?: "none" | "pending" | "approved" | "rejected";
+  isAdmin?: boolean;
 };
 
 export function useProfile() {
