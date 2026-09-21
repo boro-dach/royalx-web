@@ -1,42 +1,49 @@
 export function getTelegramInitData(): string {
   if (typeof window === "undefined") return "";
 
-  // 1. Check Telegram WebApp object
+  // 1. Primary: Telegram WebApp official SDK object
   const sdkInitData = window.Telegram?.WebApp?.initData;
-  if (sdkInitData) {
+  if (sdkInitData && sdkInitData.includes("hash=")) {
     try {
       sessionStorage.setItem("tg_init_data", sdkInitData);
     } catch {}
     return sdkInitData;
   }
 
-  // 2. Check URL hash (#tgWebAppData=...)
+  // 2. Check URL hash (#tgWebAppData=...) without destructive decoding
   try {
-    const hash = window.location.hash.startsWith("#")
-      ? window.location.hash.slice(1)
-      : window.location.hash;
-    const hashParams = new URLSearchParams(hash);
-    const fromHash = hashParams.get("tgWebAppData");
-    if (fromHash) {
-      sessionStorage.setItem("tg_init_data", fromHash);
-      return fromHash;
+    const rawHash = window.location.hash;
+    const match = rawHash.match(/[#&]tgWebAppData=([^&]+)/);
+    if (match) {
+      const decoded = decodeURIComponent(match[1]);
+      if (decoded.includes("hash=")) {
+        try {
+          sessionStorage.setItem("tg_init_data", decoded);
+        } catch {}
+        return decoded;
+      }
     }
   } catch {}
 
   // 3. Check URL search (?tgWebAppData=...)
   try {
-    const searchParams = new URLSearchParams(window.location.search);
-    const fromSearch = searchParams.get("tgWebAppData");
-    if (fromSearch) {
-      sessionStorage.setItem("tg_init_data", fromSearch);
-      return fromSearch;
+    const rawSearch = window.location.search;
+    const match = rawSearch.match(/[?&]tgWebAppData=([^&]+)/);
+    if (match) {
+      const decoded = decodeURIComponent(match[1]);
+      if (decoded.includes("hash=")) {
+        try {
+          sessionStorage.setItem("tg_init_data", decoded);
+        } catch {}
+        return decoded;
+      }
     }
   } catch {}
 
-  // 4. Check cached initData in sessionStorage
+  // 4. Check cached initData in sessionStorage (only if valid)
   try {
     const cached = sessionStorage.getItem("tg_init_data");
-    if (cached) return cached;
+    if (cached && cached.includes("hash=")) return cached;
   } catch {}
 
   // 5. Fallback for local development

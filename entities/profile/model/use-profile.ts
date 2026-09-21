@@ -22,7 +22,8 @@ export function useProfile() {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         const code = body.code || body.error || `HTTP_${res.status}`;
-        throw new Error(code);
+        const detailsStr = body.details ? ` (${JSON.stringify(body.details)})` : "";
+        throw new Error(`${code}${detailsStr}`);
       }
       return res.json();
     },

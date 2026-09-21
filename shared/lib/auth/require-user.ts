@@ -82,8 +82,9 @@ export async function authenticateUser(
   } catch (e) {
     const code =
       e instanceof InitDataError ? e.code : (e as Error)?.message || "INVALID_INIT_DATA";
-    console.warn("[authenticateUser] invalid initData:", code);
-    return { success: false, error: code };
+    const details = e instanceof InitDataError ? e.details : undefined;
+    console.warn("[authenticateUser] invalid initData:", code, details);
+    return { success: false, error: code, details };
   }
 
   const { id, username, first_name, photo_url } = verified.user;
