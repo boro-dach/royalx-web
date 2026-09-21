@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/admin";
-import { requireActiveUser } from "@/shared/lib/auth/require-user";
+import { authenticateUser } from "@/shared/lib/auth/require-user";
 import { isUserAdmin } from "@/shared/lib/auth/require-admin";
 
 export async function GET(req: NextRequest) {
   const initData = req.headers.get("x-telegram-init-data");
-  const uid = await requireActiveUser(initData);
-  if (!uid) {
-    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  const auth = await authenticateUser(initData);
+  if (!auth.success) {
+    return NextResponse.json(
+      { error: "UNAUTHORIZED", code: auth.error, details: auth.details },
+      { status: 401 },
+    );
   }
+  const uid = auth.uid;
 
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")

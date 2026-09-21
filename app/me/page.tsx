@@ -10,7 +10,7 @@ import { BadgeCheck, ChevronRight, Clock, Shield, X } from "lucide-react";
 
 export default function MePage() {
   const router = useRouter();
-  const { data: profile } = useProfile();
+  const { data: profile, error, refetch, isFetching } = useProfile();
   const balance = splitMoney(profile?.balanceCents ?? 0);
   const username = profile?.displayName || "Гость";
 
@@ -50,6 +50,21 @@ export default function MePage() {
   return (
     <div className="flex flex-col w-full p-4 gap-6">
       <h1 className="text-2xl font-bold">Профиль</h1>
+
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-destructive/15 border border-destructive/30 p-3 text-xs text-destructive">
+          <span className="truncate">Ошибка авторизации: {error.message}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isFetching}
+            className="h-7 px-3 text-xs border-destructive/40 text-destructive hover:bg-destructive/20 shrink-0"
+            onClick={() => refetch()}
+          >
+            {isFetching ? "..." : "Повторить"}
+          </Button>
+        </div>
+      )}
 
       <div className="flex flex-row items-center gap-4 min-w-0">
         {profile?.avatarUrl ? (

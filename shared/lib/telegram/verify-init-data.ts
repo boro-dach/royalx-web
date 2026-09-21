@@ -1,13 +1,18 @@
 import crypto from "crypto";
 import { z } from "zod";
 
-const TelegramUserSchema = z.object({
-  id: z.number(),
-  username: z.string().optional(),
-  first_name: z.string(),
-  last_name: z.string().optional(),
-  photo_url: z.string().optional(),
-});
+const TelegramUserSchema = z
+  .object({
+    id: z.coerce.number(),
+    username: z.string().nullish(),
+    first_name: z.string().nullish().default(""),
+    last_name: z.string().nullish(),
+    photo_url: z.string().nullish(),
+    language_code: z.string().nullish(),
+    is_premium: z.boolean().nullish(),
+    allows_write_to_pm: z.boolean().nullish(),
+  })
+  .passthrough();
 
 export type TelegramUser = z.infer<typeof TelegramUserSchema>;
 
@@ -68,8 +73,24 @@ export function verifyTelegramInitData(
   const userRaw = params.get("user");
   if (!userRaw) throw new InitDataError("NO_USER");
 
-  const parsed = TelegramUserSchema.safeParse(JSON.parse(userRaw));
-  if (!parsed.success) throw new InitDataError("BAD_USER_SHAPE");
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(userRaw);
+  } catch (err) {
+    console.warn("[verifyTelegramInitData] failed to parse user JSON:", userRaw, err);
+    throw new InitDataError("MALFORMED_USER_JSON");
+  }
+
+  const parsed = TelegramUserSchema.safeParse(parsedJson);
+  if (!parsed.success) {
+    console.warn(
+      "[verifyTelegramInitData] BAD_USER_SHAPE:",
+      JSON.stringify(parsed.error.format()),
+      "raw:",
+      userRaw,
+    );
+    throw new InitDataError("BAD_USER_SHAPE");
+  }
 
   return { user: parsed.data };
 }

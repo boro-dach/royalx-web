@@ -59,26 +59,31 @@ async function refreshAvatarIfStale(userId: number, photoUrlFromInitData: string
     .eq("id", userId);
 }
 
-export async function requireActiveUser(
+export type AuthResult =
+  | { success: true; uid: number }
+  | { success: false; error: string; details?: unknown };
+
+export async function authenticateUser(
   initDataRaw: string | null,
-): Promise<number | null> {
-  if (!initDataRaw) return null;
+): Promise<AuthResult> {
+  if (!initDataRaw) {
+    return { success: false, error: "MISSING_INIT_DATA" };
+  }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) {
-    console.error("[requireActiveUser] TELEGRAM_BOT_TOKEN is not set");
-    return null;
+    console.error("[authenticateUser] TELEGRAM_BOT_TOKEN is not set");
+    return { success: false, error: "SERVER_CONFIG_ERROR" };
   }
 
   let verified;
   try {
     verified = verifyTelegramInitData(initDataRaw, botToken);
   } catch (e) {
-    console.warn(
-      "[requireActiveUser] invalid initData",
-      e instanceof InitDataError ? e.code : e,
-    );
-    return null;
+    const code =
+      e instanceof InitDataError ? e.code : (e as Error)?.message || "INVALID_INIT_DATA";
+    console.warn("[authenticateUser] invalid initData:", code);
+    return { success: false, error: code };
   }
 
   const { id, username, first_name, photo_url } = verified.user;
@@ -86,20 +91,25 @@ export async function requireActiveUser(
   const { data, error } = await supabaseAdmin
     .from("users")
     .upsert(
-      { id, username, first_name, last_seen_at: new Date().toISOString() },
+      {
+        id,
+        username: username ?? null,
+        first_name: first_name || username || "Игрок",
+        last_seen_at: new Date().toISOString(),
+      },
       { onConflict: "id" },
     )
     .select("id, is_banned")
     .single();
 
   if (error) {
-    console.error("[requireActiveUser] db error", error);
-    return null;
+    console.error("[authenticateUser] db error", error);
+    return { success: false, error: "DB_ERROR", details: error.message };
   }
 
   if (data.is_banned) {
-    console.warn("[requireActiveUser] banned", { id });
-    return null;
+    console.warn("[authenticateUser] banned", { id });
+    return { success: false, error: "USER_BANNED" };
   }
 
   // Гарантируем наличие кошелька у пользователя, не перезатирая существующий баланс
@@ -110,13 +120,20 @@ export async function requireActiveUser(
       { onConflict: "user_id", ignoreDuplicates: true },
     );
   if (walletError) {
-    console.error("[requireActiveUser] wallet upsert error", walletError);
+    console.error("[authenticateUser] wallet upsert error", walletError);
   }
 
   // не блокируем ответ на скачивание аватарки — делаем это в фоне
-  refreshAvatarIfStale(id, photo_url).catch((e) =>
+  refreshAvatarIfStale(id, photo_url ?? undefined).catch((e) =>
     console.error("[avatar] refresh failed", e),
   );
 
-  return data.id;
+  return { success: true, uid: data.id };
+}
+
+export async function requireActiveUser(
+  initDataRaw: string | null,
+): Promise<number | null> {
+  const result = await authenticateUser(initDataRaw);
+  return result.success ? result.uid : null;
 }

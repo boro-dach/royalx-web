@@ -19,7 +19,11 @@ export function useProfile() {
     queryKey: ["me"],
     queryFn: async () => {
       const res = await apiFetch("/api/me");
-      if (!res.ok) throw new Error("FAILED_TO_LOAD_PROFILE");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const code = body.code || body.error || `HTTP_${res.status}`;
+        throw new Error(code);
+      }
       return res.json();
     },
     enabled: typeof window !== "undefined",
