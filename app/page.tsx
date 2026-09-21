@@ -8,6 +8,7 @@ import {
 import { GameCard } from "@/widgets/games/ui/game-card";
 import Header from "@/widgets/header/ui/header";
 import { Flame } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const GAMES = Array.from({ length: 8 }).map((_, i) => ({
   id: i,
@@ -18,6 +19,8 @@ const GAMES = Array.from({ length: 8 }).map((_, i) => ({
 }));
 
 export default function Home() {
+  const router = useRouter();
+
   return (
     <div className="flex w-full flex-col gap-6 px-4">
       <Header />
@@ -41,7 +44,11 @@ export default function Home() {
 
         <CarouselContent className="-ml-3 mt-3">
           {GAMES.map((g) => (
-            <CarouselItem key={g.id} className="basis-auto pl-3">
+            <CarouselItem
+              key={g.id}
+              className="basis-auto pl-3"
+              onClick={() => router.push(`/games/lucky-jet`)}
+            >
               <GameCard {...g} />
             </CarouselItem>
           ))}
