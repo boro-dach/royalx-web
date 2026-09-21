@@ -11,7 +11,8 @@ const TelegramUserSchema = z.object({
 
 export type TelegramUser = z.infer<typeof TelegramUserSchema>;
 
-const MAX_AUTH_AGE_SECONDS = 60 * 60 * 24; // 24 часа
+const MAX_AUTH_AGE_SECONDS =
+  Number(process.env.TELEGRAM_INIT_DATA_MAX_AGE) || 60 * 60 * 24 * 30; // 30 дней
 
 export class InitDataError extends Error {
   constructor(public code: string) {
@@ -50,10 +51,17 @@ export function verifyTelegramInitData(
     Buffer.from(hash, "hex"),
   );
 
-  if (!valid) throw new InitDataError("BAD_SIGNATURE");
+  if (!valid) {
+    console.warn("[verifyTelegramInitData] signature mismatch");
+    throw new InitDataError("BAD_SIGNATURE");
+  }
 
   const authDate = Number(params.get("auth_date"));
   if (!authDate || Date.now() / 1000 - authDate > MAX_AUTH_AGE_SECONDS) {
+    const ageSeconds = authDate ? Math.round(Date.now() / 1000 - authDate) : null;
+    console.warn(
+      `[verifyTelegramInitData] auth_date expired. authDate=${authDate}, age=${ageSeconds}s, maxAge=${MAX_AUTH_AGE_SECONDS}s`,
+    );
     throw new InitDataError("EXPIRED");
   }
 

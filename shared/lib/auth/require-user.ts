@@ -102,6 +102,17 @@ export async function requireActiveUser(
     return null;
   }
 
+  // Гарантируем наличие кошелька у пользователя, не перезатирая существующий баланс
+  const { error: walletError } = await supabaseAdmin
+    .from("wallets")
+    .upsert(
+      { user_id: id, balance: 0 },
+      { onConflict: "user_id", ignoreDuplicates: true },
+    );
+  if (walletError) {
+    console.error("[requireActiveUser] wallet upsert error", walletError);
+  }
+
   // не блокируем ответ на скачивание аватарки — делаем это в фоне
   refreshAvatarIfStale(id, photo_url).catch((e) =>
     console.error("[avatar] refresh failed", e),

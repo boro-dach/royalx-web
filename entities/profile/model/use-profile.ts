@@ -22,8 +22,7 @@ export function useProfile() {
       if (!res.ok) throw new Error("FAILED_TO_LOAD_PROFILE");
       return res.json();
     },
-    enabled:
-      typeof window !== "undefined" && !!window?.Telegram?.WebApp?.initData,
+    enabled: typeof window !== "undefined",
     staleTime: 30_000,
   });
 }

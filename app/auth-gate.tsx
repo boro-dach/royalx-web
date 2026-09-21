@@ -1,25 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getTelegramInitData } from "@/shared/lib/telegram/api-fetch";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [inTelegram, setInTelegram] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const tg = window?.Telegram?.WebApp;
+    const checkAuth = () => {
+      const initData = getTelegramInitData();
+      if (initData) {
+        window.Telegram?.WebApp?.ready?.();
+        setInTelegram(true);
+        return true;
+      }
+      return false;
+    };
 
-    if (tg?.initData) {
-      tg.ready();
-      setInTelegram(true);
-      return;
-    }
+    if (checkAuth()) return;
 
-    if (process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_INIT_DATA) {
-      setInTelegram(true);
-      return;
-    }
+    // Retry once in case telegram-web-app.js is still reading the URL hash
+    const timer = setTimeout(() => {
+      if (!checkAuth()) {
+        setInTelegram(false);
+      }
+    }, 250);
 
-    setInTelegram(false);
+    return () => clearTimeout(timer);
   }, []);
 
   if (inTelegram === null) {
