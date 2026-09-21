@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/shared/lib/supabase/admin";
 import { requireActiveUser } from "@/shared/lib/auth/require-user";
 import { rateLimit } from "@/shared/lib/rate-limit";
 
-import { deriveCrashPoint } from "@/shared/lib/games/crash";
+import { deriveCrashPoint, multiplierAtElapsedMs } from "@/shared/lib/games/crash";
 import {
   generateServerSeed,
   hashServerSeed,
@@ -46,17 +46,31 @@ export async function POST(req: NextRequest) {
 
   const { data: existingPending } = await supabaseAdmin
     .from("game_rounds")
-    .select("id")
+    .select("id, result, created_at")
     .eq("user_id", uid)
     .eq("game", "lucky_jet")
     .eq("status", "pending")
     .maybeSingle();
 
   if (existingPending) {
-    return NextResponse.json(
-      { error: "ROUND_ALREADY_ACTIVE" },
-      { status: 409 },
-    );
+    const cp = (existingPending.result as { crash_point?: number })?.crash_point;
+    const elapsedMs =
+      Date.now() - new Date(existingPending.created_at).getTime();
+    if (typeof cp === "number" && multiplierAtElapsedMs(elapsedMs) >= cp) {
+      await supabaseAdmin
+        .from("game_rounds")
+        .update({
+          status: "completed",
+          payout: 0,
+          finished_at: new Date().toISOString(),
+        })
+        .eq("id", existingPending.id);
+    } else {
+      return NextResponse.json(
+        { error: "ROUND_ALREADY_ACTIVE" },
+        { status: 409 },
+      );
+    }
   }
 
   const { data: rtp } = await supabaseAdmin.rpc("resolve_rtp", {
@@ -104,5 +118,6 @@ export async function POST(req: NextRequest) {
     serverSeedHash,
     balanceCents: data[0].new_balance,
     startedAt: data[0].started_at,
+    crashPoint,
   });
 }
