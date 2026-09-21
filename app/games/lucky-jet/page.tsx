@@ -84,9 +84,10 @@ export default function LuckyJetPage() {
     [],
   );
 
-  const curvePoints = (() => {
-    const points: string[] = [];
+  const { curvePoints, tip } = (() => {
     const steps = 40;
+    const curveXY: { x: number; y: number }[] = [];
+
     for (let i = 0; i <= steps; i++) {
       const frac = i / steps;
       const x = frac * 100;
@@ -94,16 +95,18 @@ export default function LuckyJetPage() {
         100 -
         Math.pow(frac, 1.6) *
           (state === "idle" ? 0 : Math.min(90, (multiplier - 1) * 30));
-      points.push(`${x},${y}`);
+      curveXY.push({ x, y });
     }
-    return points.join(" ");
+
+    return {
+      curvePoints: curveXY.map((p) => `${p.x},${p.y}`).join(" "),
+      tip: curveXY[curveXY.length - 1],
+    };
   })();
 
   return (
-    // 1. Изменено на h-[100dvh] (или h-dvh) и добавлен overflow-hidden
-    <div className="flex flex-col w-full h-[100dvh] overflow-hidden bg-zinc-950 text-white p-4 gap-4">
-      {/* 2. Убран min-h-[320px], добавлен min-h-0 чтобы блок мог сжиматься */}
-      <div className="relative flex-1 min-h-0 rounded-2xl bg-gradient-to-b from-indigo-950 to-zinc-950 overflow-hidden border border-white/10">
+    <div className="flex flex-col w-full h-dvh overflow-hidden bg-zinc-950 text-white p-4 gap-4">
+      <div className="relative flex-1 min-h-0 rounded-2xl bg-linear-to-b from-indigo-950 to-zinc-950 overflow-hidden border border-white/10">
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -117,11 +120,9 @@ export default function LuckyJetPage() {
             vectorEffect="non-scaling-stroke"
           />
           {state === "flying" && (
-            <circle
-              cx="90"
-              cy={100 - Math.min(90, (multiplier - 1) * 30)}
-              r="2"
-              className="fill-primary"
+            <div
+              className="absolute size-3 rounded-full bg-primary -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${tip.x}%`, top: `${tip.y}%` }}
             />
           )}
         </svg>
