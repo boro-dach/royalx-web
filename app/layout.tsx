@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${onest.className} ${geistMono.variable} h-full antialiased dark`}
+      className={`${onest.className} ${geistMono.variable} antialiased dark`}
       suppressHydrationWarning
     >
       <head>
@@ -37,9 +37,12 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="h-dvh w-full flex flex-col overflow-hidden bg-zinc-950">
         <Providers>
-          {children} <Footer />
+          <main className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden relative">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>
